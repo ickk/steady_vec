@@ -24,13 +24,13 @@ use {
 /// A growable array-like datastructure, that can resize without *moving*
 /// existing elements
 pub struct SteadyVec<E> {
-  /// There are 32 "sub-arrays", where each successive subarray is double the
-  /// size of the previous. The first 2 subarrays have a capacity of 2; this
-  /// allows for a maximum limit of 2³² elements to be stored.
-  subarrays: [Option<ManualHeapArrayVec<E>>; 32],
   /// Items from 0..len are initialised, but items from len.. are uninit or
   /// the subarrays may be `None`.
   len: usize,
+  /// There are 31 "sub-arrays", where each successive subarray doubles the
+  /// capacity of the `SteadyVec`. The first 2 subarrays have a capacity of 4;
+  /// this allows for a maximum limit of 2³² elements to be stored.
+  subarrays: [Option<ManualHeapArrayVec<E>>; 31],
 }
 
 // There's a somewhat large amount of unsafe code here. The safety conditions
@@ -60,24 +60,24 @@ struct IndexMetadata {
 /// The size of subarray number `n`
 ///
 /// Counting from `n=0`, follows the pattern:
-/// `2`, `2`, `4`, `8`, `16`, `32`, ..
+/// `4`, `4`, `8`, `16`, `32`, ..
 #[inline]
-fn subarray_capacity(n: usize) -> usize {
+pub(crate) fn subarray_capacity(n: usize) -> usize {
   // The very first subarray needs special handling, because it has a capacity
-  // of 2, instead of 1. We use `max` for this.
-  (1 << n).max(2)
+  // of 4, instead of 2. We use `max` for this.
+  (1 << n + 1).max(4)
 }
 
 /// The range of indices (inclusive) corresponding to subarray number `n`
 ///
 /// Counting from `n=0`, follows the pattern:
-/// `(0, 1)`, `(2, 3)`, `(4, 7)`, `(8, 15)`, `(16, 31)`..
+/// `(0, 3)`, `(4, 7)`, `(8, 15)`, `(16, 31)`..
 #[inline]
-fn subarray_index_range(n: usize) -> (usize, usize) {
+pub(crate) fn subarray_index_range(n: usize) -> (usize, usize) {
   // The very first subarray needs special handling, because its first index is
-  // 0 instead of 1. We mask off the 1st bit for this.
-  let first = (1 << n) & (!0b1);
-  let last = (1 << (n + 1)) - 1;
+  // 0 instead of 2. We mask off the 2nd bit for this.
+  let first = (1 << (n + 1)) & (!0b10);
+  let last = (1 << (n + 2)) - 1;
   (first, last)
 }
 
@@ -86,16 +86,15 @@ fn subarray_index_range(n: usize) -> (usize, usize) {
 /// This is effectively the inverse of `subarray_index_range`.
 ///
 /// Follows the pattern:
-/// `0..=1` -> `0`
-/// `2..=3` -> `1`
-/// `4..=7` -> `2`
-/// `8..=15` -> `3`
-/// `16..=31` -> `4`
+/// `0..=3` -> `0`
+/// `4..=7` -> `1`
+/// `8..=15` -> `2`
+/// `16..=31` -> `3`
 #[inline]
-fn index_to_subarray_n(index: usize) -> usize {
+pub(crate) fn index_to_subarray_n(index: usize) -> usize {
   // The very first subarray needs special handling, because an index of 0
   // corresponds to subarray 0, but log2(0) is undefined.
-  (index.max(1)).ilog2() as usize
+  (index.max(2) >> 1).ilog2() as usize
 }
 
 /// Takes an index and returns the corresponding subarray number and the index
@@ -103,7 +102,7 @@ fn index_to_subarray_n(index: usize) -> usize {
 ///
 /// index should be in the range `0..SteadyVec::MAX_LEN`
 #[inline]
-fn index_metadata(index: usize) -> IndexMetadata {
+pub(crate) fn index_metadata(index: usize) -> IndexMetadata {
   let subarray_n = index_to_subarray_n(index);
   let (first_index, _) = subarray_index_range(subarray_n);
   let element = index - first_index;
@@ -115,8 +114,9 @@ fn index_metadata(index: usize) -> IndexMetadata {
 }
 
 impl<E> SteadyVec<E> {
-  /// The maximum capacity of a steady vec, 2³²
-  pub const MAX_CAPACITY: usize = u32::MAX as usize + 1;
+  #[cfg(any(target_pointer_width = "32", target_pointer_width = "64"))]
+  /// The maximum capacity of a `SteadyVec`, 2³² on 64 bit architectures
+  pub const MAX_CAPACITY: usize = (u32::MAX as usize).saturating_add(1);
 
   /// Constructs a new, empty `Box<SteadyVec<T>>`
   ///
@@ -126,8 +126,8 @@ impl<E> SteadyVec<E> {
   /// stack moves are cheaper compared to a bare [`SteadyVec`](SteadyVec::new).
   pub fn new_boxed() -> Box<Self> {
     Box::new(SteadyVec {
-      subarrays: [ManualHeapArrayVec::OPTION_NONE; 32],
       len: 0,
+      subarrays: [ManualHeapArrayVec::OPTION_NONE; 31],
     })
   }
 
@@ -141,8 +141,8 @@ impl<E> SteadyVec<E> {
   /// imposes an extra indirection on accesses, but stack-moves are cheaper.
   pub const fn new() -> Self {
     SteadyVec {
-      subarrays: [ManualHeapArrayVec::OPTION_NONE; 32],
       len: 0,
+      subarrays: [ManualHeapArrayVec::OPTION_NONE; 31],
     }
   }
 

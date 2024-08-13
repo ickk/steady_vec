@@ -1,31 +1,45 @@
 `steady_vec`
 ===============
 
-`SteadyVec` is a "`Vec`-like" datastructure that on *resize* leaves existing
-elements where they are, and uses the new allocation only for subsequent items.
+[`SteadyVec`] is a growable "`Vec`-like" datastructure that does not *move*
+elements on *resize*. It maintains the existing allocation whilst using new
+allocations for subsequent items.
 
-It uses a similar capacity-doubling strategy as `Vec`, and supports many of the
-same methods - `push`, `pop`, `get`, `swap`, `insert`, `remove`, `iter`, &c.
+Like [`Vec`], it begins life without any allocation, then uses a
+capacity-doubling strategy each time it runs out of space. It supports many of
+the same methods: `push`, `pop`, `get`, `swap`, `insert`, `remove`, `iter`, &c.
+
+### Architecture
+
+The `SteadyVec` stores a `usize` length, and 31 pointers to each of the
+optional allocations. If all 31 allocations are used the total allocated
+capacity is 2³².
+
+Each individual allocation has a fixed size based on its position;
+
+|**alloc**|`0`|`1`|`2`|`3`|`4`|`5`|`6`|`7`|...|`30`|
+|---------|---|---|---|---|---|---|---|---|---|----|
+| **size**| 4 | 4 | 8 | 16| 32| 64|128|256|...| 2³¹|
 
 ![diagram](diagram.svg)
 
 ### why?
 
-When a `Vec` becomes full, it *resizes*, which is a process of allocating a new
-vector with twice the capacity and then *moving* every element from the
+When a rust `Vec` becomes full, it *resizes*, which is a process of allocating
+a new vector with twice the capacity and then *moving* every element from the
 original vector into the new vector. Sometimes you need a growable
-"vector-like" thing but you also need elements not to *move* on growth.
+"vector-like" thing, but you also need elements not to *move* on growth.
 
 Trade-offs:
 - It is not possible to get slices over arbitrary ranges, as the underlying
   elements may not be contiguous in memory.
-- `SteadyVec<T>`'s size is large (~264 bytes), so stack moves are more
-  expensive. You can use a `Box<SteadyVec<T>>` instead, but that requires an
-  extra indirection for every access.
+- `SteadyVec<T>`'s stack-size is large (~256 bytes on 64 bit architectures), so
+  stack moves are more expensive. You can use a `Box<SteadyVec<T>>` to mitigate
+  this, but that requires an extra indirection for every access.
 
-Since `SteadyVec` guarantees that elements will not *move* when growing, it may
-be a useful primitive for certain datastructures designed for concurrent
-access.
+Since `SteadyVec` guarantees that elements will not *move* when growing (or
+shrinking), it may be a useful primitive in the design of certain
+datastructures that provide concurrent access.
 
 
 Future work

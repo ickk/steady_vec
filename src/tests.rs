@@ -4,43 +4,43 @@ use super::*;
 fn meta() {
   use super::{index_to_subarray_n, subarray_capacity, subarray_index_range};
 
-  assert_eq!(subarray_capacity(0), 2);
-  assert_eq!(subarray_index_range(0), (0, 1));
-  for index in 0..=1 {
+  assert_eq!(subarray_capacity(0), 4);
+  assert_eq!(subarray_index_range(0), (0, 3));
+  for index in 0..=3 {
     assert_eq!(index_to_subarray_n(index), 0);
   }
 
-  assert_eq!(subarray_capacity(1), 2);
-  assert_eq!(subarray_index_range(1), (2, 3));
-  for index in 2..=3 {
+  assert_eq!(subarray_capacity(1), 4);
+  assert_eq!(subarray_index_range(1), (4, 7));
+  for index in 4..=7 {
     assert_eq!(1, index_to_subarray_n(index));
   }
 
-  assert_eq!(subarray_capacity(2), 4);
-  assert_eq!(subarray_index_range(2), (4, 7));
-  for index in 4..=7 {
+  assert_eq!(subarray_capacity(2), 8);
+  assert_eq!(subarray_index_range(2), (8, 15));
+  for index in 8..=15 {
     assert_eq!(2, index_to_subarray_n(index));
   }
 
-  assert_eq!(subarray_capacity(3), 8);
-  assert_eq!(subarray_index_range(3), (8, 15));
-  for index in 8..=15 {
+  assert_eq!(subarray_capacity(3), 16);
+  assert_eq!(subarray_index_range(3), (16, 31));
+  for index in 16..=31 {
     assert_eq!(3, index_to_subarray_n(index));
   }
 
-  assert_eq!(subarray_capacity(4), 16);
-  assert_eq!(subarray_index_range(4), (16, 31));
-  for index in 16..=31 {
+  assert_eq!(subarray_capacity(4), 32);
+  assert_eq!(subarray_index_range(4), (32, 63));
+  for index in 32..=63 {
     assert_eq!(4, index_to_subarray_n(index));
   }
 
-  assert_eq!(subarray_capacity(31), 2usize.pow(31));
+  assert_eq!(subarray_capacity(30), 2usize.pow(31));
   assert_eq!(
-    subarray_index_range(31),
+    subarray_index_range(30),
     (2usize.pow(31), 2usize.pow(32) - 1)
   );
-  assert_eq!(31, index_to_subarray_n(2usize.pow(31)));
-  assert_eq!(31, index_to_subarray_n(2usize.pow(32) - 1));
+  assert_eq!(30, index_to_subarray_n(2usize.pow(31)));
+  assert_eq!(30, index_to_subarray_n(2usize.pow(32) - 1));
 }
 
 #[test]
