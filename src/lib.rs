@@ -21,8 +21,8 @@ use {
   },
 };
 
-/// A heap allocated indexable array-like datastructure, that will grow without
-/// moving existing elements
+/// A growable array-like datastructure, that can resize without *moving*
+/// existing elements
 pub struct SteadyVec<E> {
   /// There are 32 "sub-arrays", where each successive subarray is double the
   /// size of the previous. The first 2 subarrays have a capacity of 2; this
