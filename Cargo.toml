@@ -1,0 +1,19 @@
+[package]
+name = "steady_vec"
+version = "0.0.0"
+edition = "2021"
+authors = ["ickk <crates@ickk.io>"]
+readme = "./README.md"
+include = ["src/"]
+repository = "https://github.com/ickk/steady_vec/"
+publish = false
+
+[dependencies]
+
+[lints]
+rust.unsafe_op_in_unsafe_fn = "deny"
+clippy.new_without_default = "allow"
+clippy.toplevel_ref_arg = "allow"
+clippy.too_many_arguments = "allow"
+clippy.match_ref_pats = "allow"
+clippy.needless_return = "allow"
