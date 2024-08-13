@@ -3,8 +3,9 @@ name = "steady_vec"
 version = "0.0.0"
 edition = "2021"
 authors = ["ickk <crates@ickk.io>"]
+license = "MIT OR Apache-2.0 OR Zlib"
 readme = "./README.md"
-include = ["src/"]
+include = ["src/", "LICENSE-APACHE", "LICENSE-MIT", "LICENSE-ZLIB"]
 repository = "https://github.com/ickk/steady_vec/"
 publish = false
 

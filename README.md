@@ -32,3 +32,18 @@ there are still outstanding methods & traits including:
 
 - binary_search
 - sort
+
+
+License
+-------
+
+This crate is licensed under any of the
+[Apache license, Version 2.0](./LICENSE-APACHE),
+or the
+[MIT license](./LICENSE-MIT),
+or the
+[Zlib license](./LICENSE-ZLIB)
+at your option.
+
+Unless explicitly stated otherwise, any contributions you intentionally submit
+for inclusion in this work shall be licensed accordingly.
